@@ -1,0 +1,181 @@
+<div class="animated fadeIn">
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <div class="float-right">
+
+              <button type="button"  *ngIf="policy['devices'].create" (click)="open(content)" class="btn btn-outline-primary"><i class="fa fa-plus"></i>&nbsp;New Device</button>
+              <button type="button" (click)="refresh()" class="btn btn-outline-warning"><i class="fa fa-refresh"></i>&nbsp;Refresh</button>
+            </div>
+          </div>
+          <div class="card-body table-responsive">
+
+
+
+              <table style="width:100%" datatable [dtOptions]="dtOptions" class="table table-striped">
+              <!-- <table datatable  class="row-border hover"> -->
+                  <thead>
+                    <tr>
+                      <!-- <th>ID</th> -->
+                      <th>Serial Number</th>
+                      <th>Station</th>
+                      <th>Commisioned At</th>
+                      <th>Location</th>
+
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody *ngIf="nodes?.length != 0">
+                      <tr *ngFor="let node of nodes">
+                          <!-- <td>{{ node.id }}</td> -->
+                          <td>{{ node.serial_number }}</td>
+                          <td>{{ nodeParent(node) }}</td>
+                          <td>{{ node.commissioned_at }}</td>
+                          <td>{{ parseLoc(node) }}</td>
+
+                          <td>
+                            <button *ngIf="policy['devices'].update" class="btn btn-outline-primary btn-sm" (click)='editModal(edContent, node)'> <i class="fa fa-pencil"></i> </button>
+                            <button *ngIf="policy['devices'].delete" class="btn btn-outline-danger btn-sm" (click)='del(node)'> <i class="fa fa-trash"></i> </button>
+                          </td>
+                      </tr>
+                  </tbody>
+                  <tbody *ngIf="nodes?.length == 0">
+                    <tr>
+                      <td colspan="3" class="no-data-available">No data!</td>
+                    </tr>
+                  <tbody>
+                </table>
+
+                <!-- add new modal -->
+                <ng-template #content let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Create Device</h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+                        <!-- <div class="form-group">
+
+                          <label for="fname">First Name</label>
+                          <div class="input-group">
+                            <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" >
+                            <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" ngbDatepicker #dp="ngbDatepicker">
+                            <div class="input-group-append">
+                              <button class="btn btn-outline-secondary calendar" (click)="dp.toggle()" type="button"></button>
+                            </div>
+                          </div>
+                        </div> -->
+                        <div class="form-group col-4">
+                            <input type="text" class="form-control" name="snum" [(ngModel)]='snum' placeholder="Enter Serial Number">
+                          </div>
+                        <div class="form-group col-4">
+                            <input type="text" class="form-control" name="Stat" [(ngModel)]='stat' placeholder="Enter Station ">
+                          </div>
+                        <div class="form-group col-4">
+                            <input type="text" class="form-control" name="commat" [(ngModel)]='commat' placeholder="Enter Commission Date">
+                          </div>
+
+
+                          <div class="col-12">
+                              <h6 style="margin-top:10px; border-bottom: 1px #c8ced3 solid">Location Details</h6>
+                            </div>
+                        <!-- <div class="col-12">
+                            <hr>
+                        </div> -->
+
+                        <div class="form-group col-6">
+                            <input type="text" class="form-control" name="house_number" [(ngModel)]='loc.long' placeholder="Enter Longitude">
+                          </div>
+                        <div class="form-group col-6">
+                            <input type="text" class="form-control" name="desc" [(ngModel)]='loc.lat' placeholder="Enter Latitude ">
+                          </div>
+
+
+
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='load' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateNew()' [ngClass]=" (validateNew())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="saveNew()">Save</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+                  <!-- edit modal -->
+                <ng-template #edContent let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Edit Device </h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+
+                          <div class="form-group col-4">
+                              <input type="text" class="form-control" name="snum" [(ngModel)]='esnum' placeholder="Enter Serial Number">
+                            </div>
+                          <div class="form-group col-4">
+                              <input type="text" class="form-control" name="Stat" [(ngModel)]='estat' placeholder="Enter Station ">
+                            </div>
+                          <div class="form-group col-4">
+                              <input type="text" class="form-control" name="commat" [(ngModel)]='ecommat' placeholder="Enter Commission Date">
+                            </div>
+
+
+                            <div class="col-12">
+                                <h6 style="margin-top:10px; border-bottom: 1px #c8ced3 solid">Location Details</h6>
+                              </div>
+                          <!-- <div class="col-12">
+                              <hr>
+                          </div> -->
+
+                          <div class="form-group col-6">
+                              <input type="text" class="form-control" name="house_number" [(ngModel)]='eloc.long' placeholder="Enter Longitude">
+                            </div>
+                          <div class="form-group col-6">
+                              <input type="text" class="form-control" name="desc" [(ngModel)]='eloc.lat' placeholder="Enter Latitude ">
+                            </div>
+
+
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='eload' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateEdit()' [ngClass]=" (validateEdit())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="edit()">Update</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+          </div>
+        </div>
+      </div><!--/.col-->
+    </div><!--/.row-->
+  </div>

@@ -1,0 +1,412 @@
+<div class="animated fadeIn">
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <div class="float-right">
+
+            <button *ngIf="policy['users'].create" type="button" (click)="open(content)" class="btn btn-outline-primary"><i class="fa fa-plus"></i>&nbsp;New User</button>
+            <button type="button" (click)="refresh()" class="btn btn-outline-warning"><i class="fa fa-refresh"></i>&nbsp;Refresh</button>
+          </div>
+        </div>
+        <div class="card-body table-responsive">
+
+
+
+            <table style="width:100%" datatable [dtOptions]="dtOptions" class="table table-striped">
+            <!-- <table datatable  class="row-border hover"> -->
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>First name</th>
+                    <th>Middle name</th>
+                    <th>Last name</th>
+                    <th>Email</th>
+                    <th>Telephone</th>
+                    <th>Company</th>
+                    <th>Roles</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <!-- <tbody>
+                    <tr *ngIf="false">
+                      <td>1</td>
+                      <td>Foo</td>
+                      <td>Bar</td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>Someone</td>
+                      <td>Youknow</td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td>Iamout</td>
+                      <td>Ofinspiration</td>
+                    </tr>
+                </tbody> -->
+                <tbody *ngIf="nodes?.length != 0">
+                    <tr *ngFor="let node of nodes">
+                        <td>{{ node.id }}</td>
+                        <td>{{ node.first_name }}</td>
+                        <td>{{ node.mid_name }}</td>
+                        <td>{{ node.last_name }}</td>
+                        <td>{{ node.email }}</td>
+                        <td>{{ node.telephone }}</td>
+                        <td>{{ node.company_name }}</td>
+                        <td>{{ parseRoles(node) }}</td>
+                        <td>
+                          <button *ngIf="policy['users'].update" class="btn btn-outline-primary btn-sm" (click)='editModal(edContent, node)'> <i class="fa fa-pencil"></i> </button>
+                          <button *ngIf="policy['users'].delete" class="btn btn-outline-danger btn-sm" (click)='del(node)'> <i class="fa fa-trash"></i> </button>
+                        </td>
+                    </tr>
+                </tbody>
+                <tbody *ngIf="nodes?.length == 0">
+                  <tr>
+                    <td colspan="3" class="no-data-available">No data!</td>
+                  </tr>
+                <tbody>
+              </table>
+
+              <!-- add new modal -->
+              <ng-template #content let-modal>
+                  <div class="modal-header">
+                    <h4 class="modal-title" id="modal-basic-title">Create User</h4>
+                    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+
+                      <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                          {{inputErr}}
+                      </div>
+                      <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                          {{inputSuccess}}
+                      </div>
+                    <form class="row">
+                      <!-- <div class="form-group">
+
+                        <label for="fname">First Name</label>
+                        <div class="input-group">
+                          <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" >
+                          <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" ngbDatepicker #dp="ngbDatepicker">
+                          <div class="input-group-append">
+                            <button class="btn btn-outline-secondary calendar" (click)="dp.toggle()" type="button"></button>
+                          </div>
+                        </div>
+                      </div> -->
+                      <div class="form-group col-4">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">F. Name</span>
+                                </div>
+                                <input [ngClass]="this.fname.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="fname" [(ngModel)]='fname' placeholder="Enter your First Name">
+                              </div>
+                            </div>
+
+                        </div>
+                      <div class="form-group col-4">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">M. Name</span>
+                                </div>
+                                <input  type="text" class="form-control is-valid" name="mname" [(ngModel)]='mname' placeholder="Enter your Middle Name">
+                              </div>
+                            </div>
+
+                        </div>
+                      <div class="form-group col-4">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">L. Name</span>
+                                </div>
+                                <input [ngClass]="this.lname.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="lname" [(ngModel)]='lname' placeholder="Enter your First Name">
+                              </div>
+                            </div>
+
+                        </div>
+
+                        <div class="form-group col-6">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">Password</span>
+                                </div>
+                                <input [ngClass]="this.pword.length >= 7 ? 'is-valid':''" type="password" class="form-control" name="pword" [(ngModel)]='pword' placeholder="Enter your Password">
+                              </div>
+                            </div>
+
+                        </div>
+                      <div class="form-group col-6">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">Confirm</span>
+                                </div>
+                                <input [ngClass]="this.pword == this.cpword ? 'is-valid':''" type="password" class="form-control" name="cpword" [(ngModel)]='cpword' placeholder="Confirm your Password">
+                              </div>
+                            </div>
+
+                        </div>
+                         <div class="form-group col-4">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">Email</span>
+                                </div>
+                                <input [ngClass]="this.globalservice.IsEmail(this.email) ? 'is-valid':''" type="email" class="form-control" name="email" [(ngModel)]='email' placeholder="Enter your Email Address">
+                              </div>
+                            </div>
+
+                        </div>
+                        <div class="form-group col-4">
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">Tel.</span>
+                                </div>
+                                <input [ngClass]="this.tel.length == 11 || this.tel.length == 9 ? 'is-valid':''" type="tel" class="form-control" name="tel" [(ngModel)]='tel' placeholder="Enter your Telephone">
+                              </div>
+                            </div>
+
+                        </div>
+
+                        <div class="form-group col-4">
+
+
+                          <ng-multiselect-dropdown
+                          [placeholder]="'Select Company'"
+                          [data]="allCoy"
+                          name='company'
+                          [(ngModel)]="coyd"
+                          [settings]="dropdownSettings1"
+                          (onSelect)="onItemSelect($event,'coy')"
+                          (onDeSelect)="onItemDeSelect($event,'coy')"
+                          (onFilterChange)="onFilterChange($event,'coy')"
+                        >
+                        </ng-multiselect-dropdown>
+
+                        </div>
+
+                      <div class="form-group col-12">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <ng-multiselect-dropdown
+                          [placeholder]="'Select Roles'"
+                          [data]="allRoles"
+                          name='role'
+                          [(ngModel)]="roled"
+                          [settings]="dropdownSettings"
+                          (onSelect)="onItemSelect($event,'role')"
+                          (onDeSelect)="onItemDeSelect($event,'role')"
+                          (onFilterChange)="onFilterChange($event,'role')"
+                          (onSelectAll)="onSelectAll($event,'role')"
+                          (onDeSelectAll)="onDeSelectAll($event,'role')"
+                        >
+                        </ng-multiselect-dropdown>
+
+                        </div>
+                    </form>
+                  </div>
+                  <div class="modal-footer">
+
+                    <i *ngIf='load' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                    <button type="button" [disabled]='!validateNew()' [ngClass]=" (validateNew())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="saveNew()">Save</button>
+                    <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                  </div>
+                </ng-template>
+
+
+                <!-- edit modal -->
+              <ng-template #edContent let-modal>
+                  <div class="modal-header">
+                    <h4 class="modal-title" id="modal-basic-title">Edit User </h4>
+                    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+
+                      <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                          {{inputErr}}
+                      </div>
+                      <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                          {{inputSuccess}}
+                      </div>
+                    <form class="row">
+                      <!-- <div class="form-group">
+
+                        <label for="fname">First Name</label>
+                        <div class="input-group">
+                          <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" >
+                          <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" ngbDatepicker #dp="ngbDatepicker">
+                          <div class="input-group-append">
+                            <button class="btn btn-outline-secondary calendar" (click)="dp.toggle()" type="button"></button>
+                          </div>
+                        </div>
+                      </div> -->
+                      <div class="form-group col-4">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">F. Name</span>
+                                </div>
+                                <input [ngClass]="this.efname.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="fname" [(ngModel)]='efname' placeholder="Enter your First Name">
+                              </div>
+                            </div>
+
+                        </div>
+                      <div class="form-group col-4">
+                          <!-- <label for="fnam">First Name</label> -->
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">M. Name</span>
+                                </div>
+                                <input type="text" class="form-control is-valid" name="mname" [(ngModel)]='emname' placeholder="Enter your Middle Name">
+                              </div>
+                            </div>
+                        </div>
+                      <div class="form-group col-4">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">L. Name</span>
+                                </div>
+                                <input [ngClass]="this.elname.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="lname" [(ngModel)]='elname' placeholder="Enter your First Name">
+                              </div>
+                            </div>
+
+                        </div>
+                     <div class="form-group col-6">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">Password</span>
+                                </div>
+                                <input [ngClass]="this.epword.length >= 7 ? 'is-valid':''" type="password" class="form-control" name="pword" [(ngModel)]='epword' placeholder="Enter your Password">
+                              </div>
+                            </div>
+
+                        </div>
+                      <div class="form-group col-6">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                           <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">Confirm</span>
+                                </div>
+                                <input [ngClass]="this.epword == this.ecpword ? 'is-valid':''" type="password" class="form-control" name="cpword" [(ngModel)]='ecpword' placeholder="Confirm your Password">
+                              </div>
+                            </div>
+
+                        </div>
+                        <div class="form-group col-4">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">Email</span>
+                                </div>
+                                <input [ngClass]="this.globalservice.IsEmail(this.eemail) ? 'is-valid':''" type="email" class="form-control" name="email" [(ngModel)]='eemail' placeholder="Enter your Email Address">
+                              </div>
+                            </div>
+
+                        </div>
+
+
+
+                        <div class="form-group col-4">
+
+                          <div class="controls">
+                              <div class="input-prepend input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">Tel.</span>
+                                </div>
+                                <input [ngClass]="this.etel.length == 11 || this.etel.length == 9 ? 'is-valid':''" type="tel" class="form-control" name="tel" [(ngModel)]='etel' placeholder="Enter your Telephone">
+                              </div>
+                            </div>
+
+                        </div>
+
+                        <div class="form-group col-4">
+
+                          <ng-multiselect-dropdown
+                          [placeholder]="edcoyplace"
+                          [data]="allCoy"
+                          name='company'
+                          [(ngModel)]="ecoyd"
+                          [settings]="dropdownSettings1"
+                          (onSelect)="onItemSelect($event,'ecoy')"
+                          (onDeSelect)="onItemDeSelect($event,'ecoy')"
+                          (onFilterChange)="onFilterChange($event,'ecoy')"
+                        >
+                        </ng-multiselect-dropdown>
+
+                        </div>
+
+
+
+                        <div class="form-group col-12">
+                          <!-- <label for="fnam">First Name</label> -->
+
+                          <ng-multiselect-dropdown
+                          [placeholder]="'Select Roles'"
+                          [data]="allRoles"
+                          name='role'
+                          [(ngModel)]="eroled"
+                          [settings]="dropdownSettings"
+                          (onSelect)="onItemSelect($event,'erole')"
+                          (onDeSelect)="onItemDeSelect($event,'erole')"
+                          (onFilterChange)="onFilterChange($event,'erole')"
+                          (onSelectAll)="onSelectAll($event,'erole')"
+                          (onDeSelectAll)="onDeSelectAll($event,'erole')"
+                        >
+                        </ng-multiselect-dropdown>
+
+                        </div>
+
+                    </form>
+                  </div>
+                  <div class="modal-footer">
+
+                    <i *ngIf='eload' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                    <button type="button" [disabled]='!validateEdit()' [ngClass]=" (validateEdit())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="edit()">Update</button>
+                    <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                  </div>
+                </ng-template>
+
+
+        </div>
+      </div>
+    </div><!--/.col-->
+  </div><!--/.row-->
+</div>

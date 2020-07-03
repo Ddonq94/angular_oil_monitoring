@@ -1,0 +1,194 @@
+<div class="animated fadeIn">
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <div class="float-right">
+
+              <button type="button" *ngIf="policyRol['roles'].create" (click)="open(content)" class="btn btn-outline-primary"><i class="fa fa-plus"></i>&nbsp;New Role</button>
+              <button type="button" (click)="refresh()" class="btn btn-outline-warning"><i class="fa fa-refresh"></i>&nbsp;Refresh</button>
+            </div>
+          </div>
+          <div class="card-body table-responsive">
+
+
+
+              <table style="width:100%" datatable [dtOptions]="dtOptions" class="table table-striped">
+              <!-- <table datatable  class="row-border hover"> -->
+                  <thead>
+                    <tr>
+                      <!-- <th>ID</th> -->
+                      <th> Role name</th>
+
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <!-- <tbody>
+                      <tr *ngIf="false">
+                        <td>1</td>
+                        <td>Foo</td>
+                        <td>Bar</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>Someone</td>
+                        <td>Youknow</td>
+                      </tr>
+                      <tr>
+                        <td>3</td>
+                        <td>Iamout</td>
+                        <td>Ofinspiration</td>
+                      </tr>
+                  </tbody> -->
+                  <tbody *ngIf="nodes?.length != 0">
+                      <tr *ngFor="let node of nodes">
+                          <!-- <td>{{ node.id }}</td> -->
+                          <td>{{ node.name }}</td>
+
+                          <td>
+                            <button *ngIf="policyRol['roles'].update" class="btn btn-outline-primary btn-sm" (click)='editModal(edContent, node)'> <i class="fa fa-pencil"></i> </button>
+                            <button *ngIf="policyRol['roles'].delete" class="btn btn-outline-danger btn-sm" (click)='del(node)'> <i class="fa fa-trash"></i> </button>
+                          </td>
+                      </tr>
+                  </tbody>
+                  <tbody *ngIf="nodes?.length == 0">
+                    <tr>
+                      <td colspan="3" class="no-data-available">No data!</td>
+                    </tr>
+                  <tbody>
+                </table>
+
+                <!-- add new modal -->
+                <ng-template #content let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Create Role</h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+
+                        <div class="form-group col-12">
+
+                            <div class="controls">
+                                <div class="input-prepend input-group">
+                                  <div class="input-group-prepend">
+                                    <span class="input-group-text">Name</span>
+                                  </div>
+                                  <input [ngClass]="this.name.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="name" [(ngModel)]='name'  placeholder="Role Name">
+                                </div>
+                              </div>
+
+                        </div>
+
+                        <div class="col-12" style="margin-bottom: 10px" *ngFor="let item of keys; let i = index">
+                          <div class="row">
+                            <div class="col-2">
+                              <b>{{item.toUpperCase()}}</b>:
+
+                            </div>
+
+                            <div class='col-2' *ngFor="let sitem of skeys; let s = index">
+                              {{sitem.charAt(0).toUpperCase() + sitem.substr(1).toLowerCase()}}
+                                <br>
+                              <input type="checkbox"   name="policychanges"  [checked]="parsePolicy(item,sitem)" (change)="handleCheckChange(item, sitem)">
+
+                              <!-- {{parsePolicy(item,sitem)}} -->
+
+                            </div>
+                          </div>
+                          <hr>
+                        </div>
+
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='load' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateNew()' [ngClass]=" (validateNew())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="saveNew()">Save</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+                  <!-- edit modal -->
+                <ng-template #edContent let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Edit Role </h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+
+                          <div class="form-group col-12">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">Name</span>
+                                    </div>
+                                    <input [ngClass]="this.ename.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="name" [(ngModel)]='ename'  placeholder="Role Name">
+                                  </div>
+                                </div>
+
+                            </div>
+
+                        <div class="col-12" style="margin-bottom: 10px" *ngFor="let item of keys; let i = index">
+                            <div class="row">
+                              <div class="col-2">
+                                <b>{{item.toUpperCase()}}</b>:
+
+                              </div>
+
+                              <div class='col-2' *ngFor="let sitem of skeys; let s = index">
+                                {{sitem.charAt(0).toUpperCase() + sitem.substr(1).toLowerCase()}}
+                                  <br>
+                                <input type="checkbox"   name="policychanges"  [checked]="parsePolicy(item,sitem,1)" (change)="handleCheckChange(item, sitem, 1)">
+
+                                <!-- {{parsePolicy(item,sitem)}} -->
+
+                              </div>
+                            </div>
+                            <hr>
+                          </div>
+
+
+
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='eload' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateEdit()' [ngClass]=" (validateEdit())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="edit()">Update</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+          </div>
+        </div>
+      </div><!--/.col-->
+    </div><!--/.row-->
+  </div>

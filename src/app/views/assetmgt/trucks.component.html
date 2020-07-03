@@ -1,0 +1,258 @@
+<div class="animated fadeIn">
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <div class="float-right">
+
+              <button type="button" *ngIf="policy['trucks'].create" (click)="open(content)" class="btn btn-outline-primary"><i class="fa fa-plus"></i>&nbsp;New Truck</button>
+              <button type="button" (click)="refresh()" class="btn btn-outline-warning"><i class="fa fa-refresh"></i>&nbsp;Refresh</button>
+            </div>
+          </div>
+          <div class="card-body table-responsive">
+
+
+
+              <table style="width:100%" datatable [dtOptions]="dtOptions" class="table table-striped">
+              <!-- <table datatable  class="row-border hover"> -->
+                  <thead>
+                    <tr>
+                      <!-- <th>ID</th> -->
+                      <th>Name</th>
+                      <th>Capacity</th>
+                      <th>Product</th>
+                      <th>Plate Number</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody *ngIf="nodes?.length != 0">
+                      <tr *ngFor="let node of nodes">
+                          <!-- <td>{{ node.id }}</td> -->
+                          <td>{{ node.name }}</td>
+                          <td>{{ node.capacity | number: '1.2-2' }}</td>
+                          <!-- <td>{{ node.product_id }}</td> -->
+                          <td>{{ nodeProd(node) }}</td>
+                          <td>{{ node.plate_number }}</td>
+
+                          <td>
+                            <button *ngIf="policy['trucks'].update" class="btn btn-outline-primary btn-sm" (click)='editModal(edContent, node)'> <i class="fa fa-pencil"></i> </button>
+                            <button *ngIf="policy['trucks'].delete" class="btn btn-outline-danger btn-sm" (click)='del(node)'> <i class="fa fa-trash"></i> </button>
+                          </td>
+                      </tr>
+                  </tbody>
+                  <tbody *ngIf="nodes?.length == 0">
+                    <tr>
+                      <td colspan="3" class="no-data-available">No data!</td>
+                    </tr>
+                  <tbody>
+                </table>
+
+                <!-- add new modal -->
+                <ng-template #content let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Create Truck</h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+                        <!-- <div class="form-group">
+
+                          <label for="fname">First Name</label>
+                          <div class="input-group">
+                            <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" >
+                            <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" ngbDatepicker #dp="ngbDatepicker">
+                            <div class="input-group-append">
+                              <button class="btn btn-outline-secondary calendar" (click)="dp.toggle()" type="button"></button>
+                            </div>
+                          </div>
+                        </div> -->
+                        <div class="form-group col-6">
+
+                            <div class="controls">
+                                <div class="input-prepend input-group">
+                                  <div class="input-group-prepend">
+                                    <span class="input-group-text">Name</span>
+                                  </div>
+                                  <input [ngClass]="this.name.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="name" [(ngModel)]='name' placeholder="Enter Truck Name">
+                                </div>
+                              </div>
+
+                          </div>
+                        <div class="form-group col-6">
+
+                            <div class="controls">
+                                <div class="input-prepend input-group">
+                                  <div class="input-group-prepend">
+                                    <span class="input-group-text">Capacity</span>
+                                  </div>
+                                  <input [ngClass]="this.cap >= 1 ? 'is-valid':''" type="number" class="form-control" name="cap" [(ngModel)]='cap' placeholder="Enter Truck Capacity ">
+                                </div>
+                              </div>
+
+                          </div>
+
+                        <div class="form-group col-6">
+
+                            <div class="controls">
+                                <div class="input-prepend input-group">
+                                  <div class="input-group-prepend">
+                                    <span class="input-group-text">Plate No.</span>
+                                  </div>
+                                  <input [ngClass]="this.plate.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="plate" [(ngModel)]='plate' placeholder="Enter Plate Number ">
+                                </div>
+                              </div>
+
+                          </div>
+                        <div class="form-group col-6">
+
+                            <!-- <div class="controls">
+                                <div class="input-prepend input-group">
+                                  <div class="input-group-prepend">
+                                    <span class="input-group-text">Product</span>
+                                  </div>
+                                  <input type="text" class="form-control" name="prod" [(ngModel)]='prod' placeholder="Enter Product">
+                                </div>
+                              </div> -->
+
+                              <ng-multiselect-dropdown
+                              [placeholder]="'Select Product'"
+                              [data]="allProd"
+                              name='prod'
+                              [(ngModel)]="prodd"
+                              [settings]="dropdownSettings"
+                              (onSelect)="onItemSelect($event,'prod')"
+                              (onDeSelect)="onItemDeSelect($event,'prod')"
+                              (onFilterChange)="onFilterChange($event,'prod')"
+                            >
+                            </ng-multiselect-dropdown>
+
+                          </div>
+
+
+
+
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='load' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateNew()' [ngClass]=" (validateNew())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="saveNew()">Save</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+                  <!-- edit modal -->
+                <ng-template #edContent let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Edit Truck </h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+
+                          <div class="form-group col-6">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">Name</span>
+                                    </div>
+                                    <input [ngClass]="this.ename.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="name" [(ngModel)]='ename' placeholder="Enter Truck Name">
+                                  </div>
+                                </div>
+
+                            </div>
+                          <div class="form-group col-6">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">Capacity</span>
+                                    </div>
+                                    <input [ngClass]="this.ecap >= 1 ? 'is-valid':''" type="number" class="form-control" name="cap" [(ngModel)]='ecap' placeholder="Enter Truck Capacity ">
+                                  </div>
+                                </div>
+
+                            </div>
+
+                          <div class="form-group col-6">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">Plate No.</span>
+                                    </div>
+                                    <input [ngClass]="this.eplate.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="plate" [(ngModel)]='eplate' placeholder="Enter Plate Number">
+                                  </div>
+                                </div>
+
+                            </div>
+                          <div class="form-group col-6">
+
+                              <!-- <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">Product</span>
+                                    </div>
+                                    <input type="text" class="form-control" name="prod" [(ngModel)]='eprod' placeholder="Enter Product">
+                                  </div>
+                                </div> -->
+
+                                <ng-multiselect-dropdown
+                                [placeholder]="edprodplace"
+                                [data]="allProd"
+                                name='prod'
+                                [(ngModel)]="eprodd"
+                                [settings]="dropdownSettings"
+                                (onSelect)="onItemSelect($event,'eprod')"
+                                (onDeSelect)="onItemDeSelect($event,'eprod')"
+                                (onFilterChange)="onFilterChange($event,'eprod')"
+                              >
+                              </ng-multiselect-dropdown>
+
+                            </div>
+
+
+
+
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='eload' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateEdit()' [ngClass]=" (validateEdit())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="edit()">Update</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+          </div>
+        </div>
+      </div><!--/.col-->
+    </div><!--/.row-->
+  </div>

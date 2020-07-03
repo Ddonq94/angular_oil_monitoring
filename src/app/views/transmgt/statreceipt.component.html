@@ -1,0 +1,215 @@
+<div class="animated fadeIn">
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <div class="float-right">
+
+              <!-- <button type="button" (click)="open(content)" class="btn btn-outline-primary"><i class="fa fa-plus"></i>&nbsp;New Transaction</button> -->
+              <button type="button" (click)="refresh()" class="btn btn-outline-warning"><i class="fa fa-refresh"></i>&nbsp;Refresh</button>
+            </div>
+          </div>
+          <div class="card-body ">
+
+            <tabset>
+              <tab heading="Parent Transaction">
+
+                <div class="table-responsive">
+
+
+                  <table style="width:100%" datatable [dtOptions]="dtOptions2" class="table table-striped">
+
+                      <thead>
+                        <tr>
+                          <!-- <th>ID</th> -->
+                          <th>Owner</th>
+                          <!-- <th>DV(DBLD)</th> -->
+                          <th>Volume </th>
+                          <th>Station Name</th>
+
+
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+
+                      <tbody *ngIf="nodes2?.length != 0">
+                          <tr *ngFor="let node of nodes2">
+                              <!-- <td>{{ node.id }}</td> -->
+                              <td>{{ node.oil_marketer }}</td>
+                              <td>{{ node.volume_allocated | number: '1.2-2' }}</td>
+                              <td>{{ node.station_name }}</td>
+
+                              <td>
+                                  <button *ngIf="policy['tk2st-txns'].create" type="button" (click)="open(content, node)" class="btn btn-outline-primary"><i class="fa fa-plus"></i>&nbsp;New Transaction</button>
+                                <!-- <button class="btn btn-outline-primary btn-sm" (click)='editModal(edContent, node)'> <i class="fa fa-pencil"></i> </button> -->
+                                <!-- <button class="btn btn-outline-danger btn-sm" (click)='del(node)'> <i class="fa fa-trash"></i> </button> -->
+                              </td>
+                          </tr>
+                      </tbody>
+                      <tbody *ngIf="nodes2?.length == 0">
+                        <tr>
+                          <td colspan="3" class="no-data-available">No data!</td>
+                        </tr>
+                      <tbody>
+                    </table>
+
+                </div>
+
+
+              </tab>
+
+              <tab heading="Transaction">
+
+                  <div class="table-responsive">
+
+                <table style="width:100%" datatable [dtOptions]="dtOptions" class="table table-striped">
+                  <thead>
+                    <tr>
+                      <!-- <th>ID</th> -->
+                      <th>Name</th>
+                      <th>Volume</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody *ngIf="nodes?.length != 0">
+                      <tr *ngFor="let node of nodes">
+                          <!-- <td>{{ node.id }}</td> -->
+                          <td>{{ parseStat(node) }}</td>
+                          <td>{{ node.volume | number: '1.2-2' }}</td>
+                          <td>
+                            <button *ngIf="policy['tk2st-txns'].update" class="btn btn-outline-primary btn-sm" (click)='editModal(edContent, node)'> <i class="fa fa-pencil"></i> </button>
+                            <button *ngIf="policy['tk2st-txns'].delete" class="btn btn-outline-danger btn-sm" (click)='del(node)'> <i class="fa fa-trash"></i> </button>
+                          </td>
+                      </tr>
+                  </tbody>
+                  <tbody *ngIf="nodes?.length == 0">
+                    <tr>
+                      <td colspan="3" class="no-data-available">No data!</td>
+                    </tr>
+                  <tbody>
+                </table>
+
+              </div>
+
+
+              </tab>
+
+            </tabset>
+
+                <!-- add new modal -->
+                <ng-template #content let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Create Transaction</h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+                        <!-- <div class="form-group">
+
+                          <label for="fname">First Name</label>
+                          <div class="input-group">
+                            <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" >
+                            <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" ngbDatepicker #dp="ngbDatepicker">
+                            <div class="input-group-append">
+                              <button class="btn btn-outline-secondary calendar" (click)="dp.toggle()" type="button"></button>
+                            </div>
+                          </div>
+                        </div> -->
+                        <div class="form-group col-2">
+                          </div>
+                          <div class="form-group col-8">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">Volume</span>
+                                    </div>
+                                    <input [ngClass]="(this.num > 0) && (this.parentVol >= this.num) ? 'is-valid':''" type="text" class="form-control" name="lname" [(ngModel)]='num' placeholder="Enter Station Receipt">
+                                     &nbsp; <small *ngIf="(this.parentVol < this.num)" class="text-danger">
+                                      Please Ensure Total Volume is Less or Equal to Volume Available ({{parentVol}})
+                                    </small>
+                                  </div>
+                                </div>
+
+                          </div>
+                          <div class="form-group col-2">
+                            </div>
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='load' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateNew()' [ngClass]=" (validateNew())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="saveNew()">Save</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+                  <!-- edit modal -->
+                <ng-template #edContent let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Edit Transaction </h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+
+                          <div class="form-group col-2">
+                            </div>
+                            <div class="form-group col-8">
+
+                                <div class="controls">
+                                    <div class="input-prepend input-group">
+                                      <div class="input-group-prepend">
+                                        <span class="input-group-text">Volume</span>
+                                      </div>
+                                      <input [ngClass]="this.enum > 0 ? 'is-valid':''" type="text" class="form-control" name="lname" [(ngModel)]='enum' placeholder="Enter Station Receipt">
+                                      <!-- <small *ngIf="(this.eparentVol < this.enum)" class="text-danger">
+                                        Please Ensure Total Volume is Less or Equal to Volume Available ({{eparentVol}})
+                                      </small> -->
+                                    </div>
+                                  </div>
+
+                            </div>
+                            <div class="form-group col-2">
+                              </div>
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='eload' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateEdit()' [ngClass]=" (validateEdit())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="edit()">Update</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+          </div>
+        </div>
+      </div><!--/.col-->
+    </div><!--/.row-->
+  </div>

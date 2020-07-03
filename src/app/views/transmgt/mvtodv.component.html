@@ -1,0 +1,647 @@
+<div class="animated fadeIn">
+
+    <div class="row">
+      <div class="col-md-12">
+        <div class="card">
+          <div class="card-header">
+            <div class="float-right">
+
+              <button *ngIf="policy['mv2dv-txns'].create" type="button" (click)="open(content)" class="btn btn-outline-primary"><i class="fa fa-plus"></i>&nbsp;New Transaction</button>
+              <button type="button" (click)="refresh()" class="btn btn-outline-warning"><i class="fa fa-refresh"></i>&nbsp;Refresh</button>
+            </div>
+          </div>
+          <div class="card-body table-responsive">
+
+
+
+              <table style="width:100%" datatable [dtOptions]="dtOptions" class="table table-striped">
+              <!-- <table datatable  class="row-border hover"> -->
+                  <thead>
+                    <tr>
+                      <!-- <th>ID</th> -->
+                      <th>MV(MBLD)</th>
+                      <th>DV(DBLD)</th>
+                      <th>MV Vol.</th>
+                      <th>DV Vol.</th>
+                      <th>Volume Discharged</th>
+                      <th>Product</th>
+
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+
+                  <tbody *ngIf="nodes?.length != 0">
+                      <tr *ngFor="let node of nodes">
+                          <!-- <td>{{ node.id }}</td> -->
+                          <td>{{ parseMV(node) }}</td>
+                          <td>{{ parseDV(node) }}</td>
+                          <td>{{ node.mbl_volume | number: '1.2-2' }}</td>
+                          <td>{{ node.dbl_volume | number: '1.2-2' }}</td>
+                          <td>{{ node.volume_discharged | number: '1.2-2' }}</td>
+                          <td>{{ parseProd(node) }}</td>
+                          <td>
+                            <button *ngIf="policy['mv2dv-txns'].update" class="btn btn-outline-primary btn-sm" (click)='editModal(edContent, node)'> <i class="fa fa-pencil"></i> </button>
+                            <button *ngIf="policy['mv2dv-txns'].update" title="Assign Inspectors" class="btn btn-outline-primary btn-sm" (click)='insModal(insContent, node)'> <i class="fa fa-file"></i> </button>
+                            <button *ngIf="policy['mv2dv-txns'].delete" class="btn btn-outline-danger btn-sm" (click)='del(node)'> <i class="fa fa-trash"></i> </button>
+                          </td>
+                      </tr>
+                  </tbody>
+                  <tbody *ngIf="nodes?.length == 0">
+                    <tr>
+                      <td colspan="3" class="no-data-available">No data!</td>
+                    </tr>
+                  <tbody>
+                </table>
+
+                <!-- add new modal -->
+                <ng-template #content let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Create Transaction</h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+                        <!-- <div class="form-group">
+
+                          <label for="fname">First Name</label>
+                          <div class="input-group">
+                            <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" >
+                            <input id="dateOfBirth" class="form-control" placeholder="yyyy-mm-dd" name="dp" ngbDatepicker #dp="ngbDatepicker">
+                            <div class="input-group-append">
+                              <button class="btn btn-outline-secondary calendar" (click)="dp.toggle()" type="button"></button>
+                            </div>
+                          </div>
+                        </div> -->
+<!-- actual form -->
+                         <div class="form-group  col-6">
+                            <!-- <select class="form-control" name="mv" [(ngModel)]='mv' >
+                                <option value="">Select Mother Vessel</option>
+                                <option   *ngFor="let item of allMv; let i = index" [value]="item.id" >{{item.name}}</option>
+                              </select> -->
+
+                              <!-- <i class="icon-globe"></i> -->
+
+                              <!-- [ngClass]="'form-control is-valid'" -->
+                              <ng-multiselect-dropdown
+
+                              [placeholder]="'Select Mother Vessel'"
+                              [data]="allMv"
+                              name='mv'
+                              [(ngModel)]="mvd"
+                              [settings]="dropdownSettings"
+                              (onSelect)="onItemSelect($event,'mv')"
+                              (onDeSelect)="onItemDeSelect($event,'mv')"
+                              (onFilterChange)="onFilterChange($event,'mv')"
+                            >
+                            </ng-multiselect-dropdown>
+
+                          </div>
+
+                        <div class="form-group col-6">
+                            <!-- <select class="form-control" name="dv" [(ngModel)]='dv' >
+                                <option value="">Select Daughter Vessel</option>
+                                <option   *ngFor="let item of allDv; let i = index" [value]="item.id" >{{item.name}}</option>
+                              </select> -->
+                              <ng-multiselect-dropdown
+                                      [placeholder]="'Select Daughter Vessel'"
+                                      [data]="allDv"
+                                      name='dv'
+                                      [(ngModel)]="dvd"
+                                      [settings]="dropdownSettings"
+                                      (onSelect)="onItemSelect($event,'dv')"
+                                      (onDeSelect)="onItemDeSelect($event,'dv')"
+                                      (onFilterChange)="onFilterChange($event,'dv')"
+                                    >
+                                    </ng-multiselect-dropdown>
+                          </div>
+
+
+
+                          <div class="form-group col-6">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">MV BLDate</span>
+                                    </div>
+                                    <input [maxDate]="maxdate" [ngClass]="(this.mvbld.length >= 2) && valdate ? 'is-valid':''" class="form-control" placeholder="Enter MV BLDate (yyyy-mm-dd)"
+                                           name="mvbld" [(ngModel)]="mvbldMod" ngbDatepicker #dmv="ngbDatepicker" (click)="dmv.toggle()">
+
+                                  </div>
+                                </div>
+
+                          </div>
+
+                          <div class="form-group col-6">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">DV BLDate</span>
+                                    </div>
+                                    <input [maxDate]="maxdate" [ngClass]="(this.dvbld.length >= 2) && valdate ? 'is-valid':''" class="form-control" name="dvbld" [(ngModel)]='dvbldMod' placeholder="Enter DV BLDate (yyyy-mm-dd)"
+                                            ngbDatepicker #ddv="ngbDatepicker" (click)="ddv.toggle()">
+                                  </div>
+                                </div>
+
+                            </div>
+
+                          <div class="form-group col-6">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">MV Vol.</span>
+                                    </div>
+                                    <input [ngClass]="(this.mvbldv > 0) && (this.mvbldv >= this.dvbldv) ? 'is-valid':''" type="number" class="form-control" name="mvbldv" [(ngModel)]='mvbldv' placeholder="Enter MV BLDate Volume">
+                                  </div>
+                                </div>
+
+                          </div>
+                          <div class="form-group col-6">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">DV Vol.</span>
+                                    </div>
+                                    <input [ngClass]="(this.dvbldv > 0) && (this.mvbldv >= this.dvbldv) && (this.dvbldv >= this.voldis) ? 'is-valid':''" type="number" class="form-control" name="dvbldv" [(ngModel)]='dvbldv' placeholder="Enter DV BLDate Volume">
+                                  </div>
+                                </div>
+
+                          </div>
+
+                          <div class="form-group col-6">
+
+                              <div class="controls">
+                                  <div class="input-prepend input-group">
+                                    <div class="input-group-prepend">
+                                      <span class="input-group-text">Tot. Vol.</span>
+                                    </div>
+                                    <input [ngClass]="(this.voldis > 0) && (this.dvbldv >= this.voldis) ? 'is-valid':''" type="number" class="form-control" name="voldis" [(ngModel)]='voldis' placeholder="Enter Volume Discharged">
+                                  </div>
+                                </div>
+
+                            </div>
+
+                            <div class="form-group col-6">
+                                <!-- <select class="form-control" name="prod" [(ngModel)]='prod' >
+                                    <option value="">Select Product</option>
+                                    <option   *ngFor="let item of allProd; let i = index" [value]="item.id" >{{item.name}}</option>
+                                  </select> -->
+                                  <ng-multiselect-dropdown
+                                      [placeholder]="'Select Product'"
+                                      [data]="allProd"
+                                      name='prod'
+                                      [(ngModel)]="prodd"
+                                      [settings]="dropdownSettings"
+                                      (onSelect)="onItemSelect($event,'prod')"
+                                      (onDeSelect)="onItemDeSelect($event,'prod')"
+                                      (onFilterChange)="onFilterChange($event,'prod')"
+                                    >
+                                    </ng-multiselect-dropdown>
+
+                              </div>
+
+
+
+
+
+                          <div class="col-12">
+                              <h6 style="margin-top:10px; border-bottom: 1px #c8ced3 solid">Volume Breakdown (Click + button to add new entry)</h6>
+                            </div>
+
+
+
+
+
+                            <div class="form-group col-4">
+
+                                <div class="controls">
+                                    <div class="input-prepend input-group">
+                                      <div class="input-group-prepend">
+                                        <span class="input-group-text">Owner</span>
+                                      </div>
+                                      <input [ngClass]="this.own.length >= 2 ? 'is-valid':''" type="text" class="form-control" name="own" [(ngModel)]='own'  placeholder="Product Owner">
+                                    </div>
+                                  </div>
+
+                            </div>
+
+
+                            <div class="form-group col-4">
+                                <!-- <select class="form-control" name="depot" [(ngModel)]='depot' >
+                                    <option value="">Select Depot</option>
+                                    <option   *ngFor="let item of allDep; let i = index" [value]="item.id" >{{item.name}}</option>
+                              </select> -->
+                              <ng-multiselect-dropdown
+                              [placeholder]="'Select Depot'"
+                              [data]="allDep"
+                              name='depot'
+                              [(ngModel)]="depotd"
+                              [settings]="dropdownSettings"
+                              (onSelect)="onItemSelect($event,'dep')"
+                              (onDeSelect)="onItemDeSelect($event,'dep')"
+                              (onFilterChange)="onFilterChange($event,'dep')"
+                            >
+                            </ng-multiselect-dropdown>
+                            </div>
+                            <div class="form-group col-3">
+
+                                <div class="controls">
+                                    <div class="input-prepend input-group">
+                                      <div class="input-group-prepend">
+                                        <span class="input-group-text">Vol.</span>
+                                      </div>
+                                      <input [ngClass]="this.depvol > 0 ? 'is-valid':''" type="number" class="form-control" name="depvol" [(ngModel)]='depvol'  placeholder="Volume">
+                                    </div>
+                                  </div>
+
+
+                            </div>
+                            <div class="form-group col-1">
+                                <button type="button"  [disabled]='!validateAddBtn()' [ngClass]=" (validateAddBtn())?'btn btn-warning':'btn btn-outline-danger'" (click)="addBreak()">+</button>
+                            </div>
+                            <!-- <div class="form-group col-1">
+                              <button type="button" class="btn btn-outline-default" (click)="removeBreak(i)">X</button>
+                            </div> -->
+
+                          <div  *ngIf="volBreak?.length > 0" class="col-12">
+
+
+
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                      <th>Depot</th>
+                                      <th>Owner</th>
+                                      <th>Volume</th>
+                                      <th>Remove</th>
+
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                      <tr *ngFor="let item of volBreak; let i = index">
+                                          <td><span > {{depBreak[i]}}</span></td>
+                                          <td><span > {{item.owner}}</span></td>
+                                          <td><span > {{item.volume | number: '1.2-2'}}</span></td>
+                                          <td><button class="btn btn-danger "(click)="removeBreak(i)">X</button></td>
+                                      </tr>
+                                  </tbody>
+                            </table>
+
+                          </div>
+
+
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='load' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateNew()' [ngClass]=" (validateNew())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="saveNew()">Save</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+                  <!-- edit modal -->
+                <ng-template #edContent let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Edit Transaction </h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+
+
+
+                          <div class="form-group col-6">
+                              <!-- <select class="form-control" name="mv" [(ngModel)]='emv' >
+                                  <option value="">Select Mother Vessel</option>
+                                  <option   *ngFor="let item of allMv; let i = index" [value]="item.id" >{{item.name}}</option>
+                                </select> -->
+                                <ng-multiselect-dropdown
+                              [placeholder]="mvEdName"
+                              [data]="allMv"
+                              name='mv'
+                              [(ngModel)]="emvd"
+                              [settings]="dropdownSettings"
+                              (onSelect)="onItemSelect($event,'emv')"
+                              (onDeSelect)="onItemDeSelect($event,'emv')"
+                              (onFilterChange)="onFilterChange($event,'emv')"
+                            >
+                            </ng-multiselect-dropdown>
+                            </div>
+
+                          <div class="form-group col-6">
+                              <!-- <select class="form-control" name="dv" [(ngModel)]='edv' >
+                                  <option value="">Select Daughter Vessel</option>
+                                  <option   *ngFor="let item of allDv; let i = index" [value]="item.id" >{{item.name}}</option>
+                                </select> -->
+                                <ng-multiselect-dropdown
+                                      [placeholder]="dvEdName"
+                                      [data]="allDv"
+                                      name='dv'
+                                      [(ngModel)]="edvd"
+                                      [settings]="dropdownSettings"
+                                      (onSelect)="onItemSelect($event,'edv')"
+                                      (onDeSelect)="onItemDeSelect($event,'edv')"
+                                      (onFilterChange)="onFilterChange($event,'edv')"
+                                    >
+                                    </ng-multiselect-dropdown>
+                            </div>
+
+
+
+                            <div class="form-group col-6">
+
+                                <div class="controls">
+                                    <div class="input-prepend input-group">
+                                      <div class="input-group-prepend">
+                                        <span class="input-group-text">MV BLDate</span>
+                                      </div>
+                                      <input [maxDate]="maxdate" [ngClass]="(this.emvbld.length >= 2) && evaldate ? 'is-valid':''" class="form-control" placeholder="{{edmvEd}}" [value]='emvbld'
+                                             name="mvbld" (select)="onDateSelected('em')" [(ngModel)]="emvbldMod" ngbDatepicker #edmv="ngbDatepicker" [startDate]="edmvEd" (click)="edmv.toggle()">
+                                    </div>
+                                  </div>
+
+                            </div>
+
+                            <div class="form-group col-6">
+
+                                <div class="controls">
+                                    <div class="input-prepend input-group">
+                                      <div class="input-group-prepend">
+                                        <span class="input-group-text">DV BLDate</span>
+                                      </div>
+                                      <input [maxDate]="maxdate" [ngClass]="(this.edvbld.length >= 2) && evaldate ? 'is-valid':''"  class="form-control" name="dvbld" [(ngModel)]='edvbldMod' placeholder="{{eddvEd}}"
+                                              ngbDatepicker  (select)="onDateSelected('ed')"  #eddv="ngbDatepicker" [startDate]="eddvEd" (click)="eddv.toggle()">
+                                    </div>
+                                  </div>
+
+                              </div>
+
+                            <div class="form-group col-6">
+
+                                <div class="controls">
+                                    <div class="input-prepend input-group">
+                                      <div class="input-group-prepend">
+                                        <span class="input-group-text">MV Vol.</span>
+                                      </div>
+                                      <input [ngClass]="(this.emvbldv > 0) && (this.emvbldv >= this.edvbldv) ? 'is-valid':''" type="number" class="form-control" name="mvbldv" [(ngModel)]='emvbldv' placeholder="Enter MV BLDate Volume">
+                                    </div>
+                                  </div>
+
+                            </div>
+                            <div class="form-group col-6">
+
+                                <div class="controls">
+                                    <div class="input-prepend input-group">
+                                      <div class="input-group-prepend">
+                                        <span class="input-group-text">DV Vol.</span>
+                                      </div>
+                                      <input [ngClass]="(this.edvbldv > 0) && (this.emvbldv >= this.edvbldv) && (this.edvbldv >= this.evoldis) ? 'is-valid':''" type="number" class="form-control" name="dvbldv" [(ngModel)]='edvbldv' placeholder="Enter DV BLDate Volume">
+                                    </div>
+                                  </div>
+
+                            </div>
+
+                            <div class="form-group col-6">
+
+                                <div class="controls">
+                                    <div class="input-prepend input-group">
+                                      <div class="input-group-prepend">
+                                        <span class="input-group-text">Tot. Vol.</span>
+                                      </div>
+                                      <input [ngClass]="(this.evoldis > 0) && (this.edvbldv >= this.evoldis) ? 'is-valid':''" type="number" class="form-control" name="voldis" [(ngModel)]='evoldis' placeholder="Enter Volume Discharged">
+                                    </div>
+                                  </div>
+
+                              </div>
+
+                              <div class="form-group col-6">
+                                  <!-- <select class="form-control" name="prod" [(ngModel)]='eprod' >
+                                      <option value="">Select Product</option>
+                                      <option   *ngFor="let item of allProd; let i = index" [value]="item.id" >{{item.name}}</option>
+                                    </select> -->
+                                    <ng-multiselect-dropdown
+                                      [placeholder]="prodEdName"
+                                      [data]="allProd"
+                                      name='prod'
+                                      [(ngModel)]="eprodd"
+                                      [settings]="dropdownSettings"
+                                      (onSelect)="onItemSelect($event,'eprod')"
+                                      (onDeSelect)="onItemDeSelect($event,'eprod')"
+                                      (onFilterChange)="onFilterChange($event,'eprod')"
+                                    >
+                                    </ng-multiselect-dropdown>
+                                </div>
+
+
+
+
+
+                            <div class="col-12">
+                                <h6 style="margin-top:10px; border-bottom: 1px #c8ced3 solid">Volume Breakdown (Click + button to add new entry)</h6>
+                              </div>
+
+
+
+
+
+                              <div class="form-group col-4">
+
+                                  <div class="controls">
+                                      <div class="input-prepend input-group">
+                                        <div class="input-group-prepend">
+                                          <span class="input-group-text">Owner</span>
+                                        </div>
+                                        <input [ngClass]="this.eown.length >= 2 ? 'is-valid':''"  type="text" class="form-control" name="own" [(ngModel)]='eown'  placeholder="Product Owner">
+                                      </div>
+                                    </div>
+
+                              </div>
+
+
+                              <div class="form-group col-4">
+                                  <!-- <select class="form-control" name="depot" [(ngModel)]='edepot' >
+                                      <option value="">Select Depot</option>
+                                      <option   *ngFor="let item of allDep; let i = index" [value]="item.id" >{{item.name}}</option>
+                                </select> -->
+                                <ng-multiselect-dropdown
+                              [placeholder]="'Select Depot'"
+                              [data]="allDep"
+                              name='depot'
+                              [(ngModel)]="edepotd"
+                              [settings]="dropdownSettings"
+                              (onSelect)="onItemSelect($event,'edep')"
+                              (onDeSelect)="onItemDeSelect($event,'edep')"
+                              (onFilterChange)="onFilterChange($event,'edep')"
+                            >
+                            </ng-multiselect-dropdown>
+                              </div>
+                              <div class="form-group col-3">
+
+                                  <div class="controls">
+                                      <div class="input-prepend input-group">
+                                        <div class="input-group-prepend">
+                                          <span class="input-group-text">Vol.</span>
+                                        </div>
+                                        <input [ngClass]="this.edepvol > 0 ? 'is-valid':''" type="number" class="form-control" name="depvol" [(ngModel)]='edepvol'  placeholder="Volume">
+                                      </div>
+                                    </div>
+
+
+                              </div>
+                              <div class="form-group col-1">
+                                  <button type="button"  [disabled]='!validateEditBtn()' [ngClass]=" (validateEditBtn())?'btn btn-warning':'btn btn-outline-danger'" (click)="addBreak(1)">+</button>
+                              </div>
+                              <!-- <div class="form-group col-1">
+                                <button type="button" class="btn btn-outline-default" (click)="removeBreak(i)">X</button>
+                              </div> -->
+
+                              <div  *ngIf="evolBreak?.length > 0" class="col-12">
+
+
+
+                              <table class="table table-striped">
+                                  <thead>
+                                      <tr>
+                                        <th>Depot</th>
+                                        <th>Owner</th>
+                                        <th>Volume</th>
+                                        <th>Remove</th>
+
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let item of evolBreak; let i = index">
+                                            <td><span > {{edepBreak[i] }}</span></td>
+
+                                            <td><span > {{item.owner}}</span></td>
+                                            <td><span > {{item.volume | number: '1.2-2'}}</span></td>
+                                            <td><button class="btn btn-danger "(click)="removeBreak(i,1)">X</button></td>
+                                        </tr>
+                                    </tbody>
+                              </table>
+
+                            </div>
+
+
+
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='eload' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateEdit()' [ngClass]=" (validateEdit())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="edit()">Update</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+                  <!-- inspector modal -->
+                <ng-template #insContent let-modal>
+                    <div class="modal-header">
+                      <h4 class="modal-title" id="modal-basic-title">Assign Transaction Inspectors </h4>
+                      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+
+                        <div *ngIf="inputErr!=''" class="alert alert-danger alert-dismissible">
+                            {{inputErr}}
+                        </div>
+                        <div *ngIf="inputSuccess!=''" class="alert alert-success alert-dismissible">
+                            {{inputSuccess}}
+                        </div>
+                      <form class="row">
+
+                            <div  *ngIf="ivolBreak?.length > 0" class="col-12">
+
+
+
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                          <th>Depot</th>
+                                          <th>Owner</th>
+                                          <th>Volume</th>
+                                          <th>Inspector</th>
+                                          <th>Action</th>
+
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                          <tr *ngFor="let item of ivolBreak; let i = index">
+                                              <td><span > {{idepBreak[i]}}</span></td>
+                                              <td><span > {{item.owner}}</span></td>
+                                              <td><span > {{item.volume | number: '1.2-2'}}</span></td>
+                                              <td>
+                                                <span>  <ng-multiselect-dropdown
+
+                                                [placeholder]="insEdName[i]"
+                                                [data]="allIns"
+                                                name='{{"inspector"+i}}'
+                                                [(ngModel)]="insMod[i]"
+                                                [settings]="dropdownSettings"
+                                                (onSelect)="onItemSelect($event,'ins',i)"
+                                                (onDeSelect)="onItemDeSelect($event,'ins',i)"
+                                                (onFilterChange)="onFilterChange($event,'ins')"
+                                                >
+                                              </ng-multiselect-dropdown></span>
+                                            </td>
+                                              <td>
+                                                  <div *ngIf='(i == 0) && (ivolBreak[0].inspector_id)'>
+                                                      <input type="checkbox"   name="same"  [checked]="same" (change)="handleSameIns()">
+                                                        <label for="same"> Same Inspector For All</label><br>
+                                                    </div>
+                                              </td>
+                                          </tr>
+                                      </tbody>
+                                </table>
+
+                              </div>
+
+
+
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+
+                      <i *ngIf='eload' class="fa fa-snowflake-o fa-2x fa-spin mt-4" style="margin-bottom: 15px"></i>
+
+                      <button type="button" [disabled]='!validateIns()' [ngClass]=" (validateIns())?'btn btn-outline-primary':'btn btn-outline-danger'" class="btn btn-outline-primary" (click)="saveIns()">Update</button>
+                      <button type="button" class="btn btn-outline-dark" (click)="modal.close('Save click')">Close</button>
+                    </div>
+                  </ng-template>
+
+
+          </div>
+        </div>
+      </div><!--/.col-->
+    </div><!--/.row-->
+  </div>
